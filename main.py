@@ -143,7 +143,7 @@ async def rickroll_detection(interaction: discord.Interaction, status: str):
         await interaction.response.send_message("❌ Invalid option.\nUse `/rickroll_detection on` or `/rickroll_detection off`.")
 
 @bot.tree.command(name="rickroll_qrcode_generator", description="Generate a QR code for a RickRoll link.")
-async def rickroll_qrcode_generator(interaction: discord.Interaction, option: str = None):
+async def rickroll_qrcode_generator(interaction: discord.Interaction, option: str = None, user: discord.Member = None, message: str = None):
     qr = qrcode.QRCode(
         version=1, box_size=10, border=5
     )
@@ -157,15 +157,28 @@ async def rickroll_qrcode_generator(interaction: discord.Interaction, option: st
 
     file = discord.File(buffer, filename="rickroll_qr.png")
 
+    if not message:
+        message = "Here is your RickRoll QR Code!"  # Default message
+
     if option == "dm":
-        await interaction.user.send("Here is your RickRoll QR Code!", file=file)
+        await interaction.user.send(message, file=file)
         await interaction.response.send_message("✅ Sent QR Code to your DM!", ephemeral=True)
     elif option == "only_me":
-        await interaction.response.send_message("Here is your Rickroll QR Code!", file=file, ephemeral=True)
+        await interaction.response.send_message(message, file=file, ephemeral=True)
     elif option == "immediately":
-        await interaction.response.send_message("## Scan this QR code!", file=file, ephemeral=False)
+        await interaction.response.send_message(message, file=file, ephemeral=False)
+    elif option == "dm_others":
+        if user:
+            try:
+                await user.send(f"Sent by {interaction.user.name}\nmessage: {message}", file=file)
+                await interaction.response.send_message(f"✅ QR Code sent to {user.name}!", ephemeral=True)
+            except discord.Forbidden:
+                await interaction.response.send_message("❌ Could not send DM. The user may have DMs disabled.", ephemeral=True)
+        else:
+            await interaction.response.send_message("❌ Please mention a user to DM the QR Code to.", ephemeral=True)
     else:
         await interaction.response.send_message("❌ ## Invalid option.\n `dm` : Bot will DM you a QR code.\n `only_me` : The generated QR code will be shown here, but only you can see it.\n `immediately` : Generate QR code and send to this channel immediately.", ephemeral=True)
+
 
 @bot.tree.command(name="add_link", description="Add a custom link to the detection list.")
 async def rickroll_add_link(interaction: discord.Interaction, link: str):
