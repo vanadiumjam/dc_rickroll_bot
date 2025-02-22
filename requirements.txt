@@ -1,0 +1,5 @@
+discord.py
+requests
+qrcode
+google-api-python-client
+python-dotenv
